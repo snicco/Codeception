@@ -11,6 +11,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+
 /**
  * Executes tests.
  *
@@ -201,6 +202,12 @@ class Run extends Command
                 's',
                 InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
                 'Skip selected suites'
+            ),
+            new InputOption(
+                'include-suite',
+                'i',
+                InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
+                'Include only the given suites by name. Useful for multi-application setups'
             ),
             new InputOption(
                 'skip-group',
@@ -406,7 +413,7 @@ class Run extends Command
         // Run all tests of given suite or all suites
         if (!$test) {
             $suites = $suite ? explode(',', $suite) : Configuration::suites();
-            $this->executed = $this->runSuites($suites, $this->options['skip']);
+            $this->executed = $this->runSuites($suites, $this->options['skip'], $this->options['include-suite']);
 
             if (!empty($config['include']) and !$suite) {
                 $current_dir = Configuration::projectDir();
@@ -512,7 +519,7 @@ class Run extends Command
                 "\n<fg=white;bg=magenta>\n[$namespace]: tests from $current_dir\n</fg=white;bg=magenta>"
             );
 
-            $this->executed += $this->runSuites($suites, $this->options['skip']);
+            $this->executed += $this->runSuites($suites, $this->options['skip'], $this->options['include-suite']);
             if (!empty($config['include'])) {
                 $this->runIncludedSuites($config['include'], $current_dir);
             }
@@ -532,8 +539,13 @@ class Run extends Command
         return $config['namespace'];
     }
 
-    protected function runSuites($suites, $skippedSuites = [])
+    protected function runSuites($suites, $skippedSuites = [], $include_only = [])
     {
+        
+        if([] != $include_only) {
+            $suites = array_intersect($suites, $include_only);
+        }
+        
         $executed = 0;
         foreach ($suites as $suite) {
             if (in_array($suite, $skippedSuites)) {

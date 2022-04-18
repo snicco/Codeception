@@ -205,4 +205,45 @@ class IncludedCest
         $I->seeInShellOutput('2 tests');
         $I->dontSeeInShellOutput('4 tests');
     }
+    
+    /**
+     * @before moveToIncluded
+     * @param CliGuy $I
+     */
+    public function suitesForMultipleIncludedPackagesCanBeFilteredByName(\CliGuy $I)
+    {
+        $I->executeCommand('run --include-suite functional');
+    
+        // only functional tests are run
+        $I->seeInShellOutput('Jazz.functional Tests');
+        $I->seeInShellOutput('Jazz\Pianist.functional');
+        $I->seeInShellOutput('Shire.functional Tests');
+    
+        // unit suites are not run
+        $I->dontSeeInShellOutput('Jazz.unit Tests');
+    
+    
+        $I->executeCommand('run -i functional');
+    
+        // only functional tests are run
+        $I->seeInShellOutput('Jazz.functional Tests');
+        $I->seeInShellOutput('Jazz\Pianist.functional');
+        $I->seeInShellOutput('Shire.functional Tests');
+    
+        // unit suites are not run
+        $I->dontSeeInShellOutput('Jazz.unit Tests');
+    
+    
+        $I->executeCommand('run -i functional -i unit');
+    
+        // only functional tests are run
+        $I->seeInShellOutput('Jazz.functional Tests');
+        $I->seeInShellOutput('Jazz\Pianist.functional');
+        $I->seeInShellOutput('Shire.functional Tests');
+    
+        // unit suites are run now
+        $I->seeInShellOutput('Jazz.unit Tests');
+        
+    }
+    
 }
